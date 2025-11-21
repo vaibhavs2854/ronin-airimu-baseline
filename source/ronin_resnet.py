@@ -80,6 +80,9 @@ def get_dataset(root_dir, data_list, args, **kwargs):
     elif args.dataset == 'SubT':
         from data_subt import SubTSequence
         seq_type = SubTSequence
+    elif args.dataset == "blackbird":
+        from data_blackbird import BlackBird
+        seq_type = BlackBird
     elif args.dataset == 'KITTI':
         from data_kitti import KITTISequence
         seq_type = KITTISequence
@@ -137,7 +140,7 @@ def train(args, **kwargs):
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, eps=1e-12)
 
     start_epoch = 0
     if args.continue_from is not None and osp.exists(args.continue_from):
@@ -413,7 +416,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_path', type=str, default=None)
     parser.add_argument('--root_dir', type=str, default="/data/yuhengq/KITTI_raw/", help='Path to data directory')
     parser.add_argument('--cache_path', type=str, default=None, help='Path to cache folder to store processed data')
-    parser.add_argument('--dataset', type=str, default='KITTI', choices=['euroc','ronin', 'ridi','NavG','SubT', 'KITTI'])
+    parser.add_argument('--dataset', type=str, default='KITTI', choices=['euroc','ronin', 'ridi','NavG','SubT', 'KITTI', 'blackbird'])
     parser.add_argument('--max_ori_error', type=float, default=20.0)
     parser.add_argument('--step_size', type=int, default=25)
     parser.add_argument('--window_size', type=int, default=50)
