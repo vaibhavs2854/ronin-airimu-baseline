@@ -23,8 +23,7 @@ class BlackBird(CompiledSequence):
 
     def __init__(
         self,
-        data_root,
-        data_name,
+        data_path,
         coordinate=None,
         mode=None,
         rot_path=None,
