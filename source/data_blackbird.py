@@ -35,19 +35,23 @@ class BlackBird(CompiledSequence):
     ):
         super(BlackBird, self).__init__()
         (
-            self.data_root,
-            self.data_name,
+            self.data_path,
             self.data,
             self.ts,
             self.targets,
             self.orientations,
             self.gt_pos,
             self.gt_ori,
-        ) = (data_root, data_name, dict(), None, None, None, None, None)
+        ) = (data_path, dict(), None, None, None, None, None)
         
         self.g_vector = torch.tensor([0, 0, gravity],dtype=torch.double)
-        data_path = os.path.join(data_root, data_name)
-        self.load_imu(data_path, data_name)
+        #data_path = os.path.join(data_root, data_name)
+        #somehow grab data_name from data_path here.
+        self.load(data_path, rot_path, rot_type, coordinate, mode, remove_g)
+
+    def load(self, data_path, rot_path, rot_type, coordinate, mode, remove_g):
+        self.load_imu(data_path)
+        data_name = os.path.split(self.data_path)[-1]
         self.load_gt(data_path)
         self.refer_IMO()
         
@@ -59,6 +63,9 @@ class BlackBird(CompiledSequence):
         
         # remove gravity term
         self.remove_gravity(remove_g)
+
+
+
 
     def refer_IMO(self):
         # the provided ground truth is the drone body in the NED vicon frame
@@ -194,8 +201,17 @@ class BlackBird(CompiledSequence):
     def get_length(self):
         return self.data["time"].shape[0]
     
+    def get_feature(self):
+        return self.features
 
-    def load_imu(self, folder,data_name=None):
+    def get_target(self):
+        return self.targets
+
+    def get_aux(self):
+        return np.concatenate([self.ts, self.orientations, self.gt_pos], axis=1)
+    
+
+    def load_imu(self, folder):
         imu_data = np.loadtxt(
             os.path.join(folder, "imu_data.csv"), dtype=float, delimiter=","
         )
