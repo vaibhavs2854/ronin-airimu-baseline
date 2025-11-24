@@ -347,6 +347,14 @@ def test_sequence(args):
         elif kp == 3:
             targ_names = ['vx', 'vy', 'vz']
 
+        #save the trajectories
+        name = osp.split(data)[0].split("/")[0]
+        new_path_to_make = osp.join(args.out_dir, 'trajectories/' + name)
+        if not os.path.exists(new_path_to_make):
+            os.mkdir(new_path_to_make)
+        np.save(osp.join(args.out_dir, 'trajectories/' + name + '/pred_trajectory.npy'), pos_pred)
+        np.save(osp.join(args.out_dir, 'trajectories/' + name + '/gt_trajectory.npy'), pos_gt)
+
         plt.figure('{}'.format(data), figsize=(16, 9))
         plt.subplot2grid((kp, 2), (0, 0), rowspan=kp - 1)
         plt.plot(pos_pred[:, 0], pos_pred[:, 1])

@@ -42,6 +42,9 @@ class BlackBird(CompiledSequence):
             self.gt_pos,
             self.gt_ori,
         ) = (data_path, dict(), None, None, None, None, None)
+
+        self.w = kwargs.get('interval', 1)
+        self.info = {}
         
         self.g_vector = torch.tensor([0, 0, gravity],dtype=torch.double)
         #data_path = os.path.join(data_root, data_name)
@@ -62,6 +65,13 @@ class BlackBird(CompiledSequence):
         
         # remove gravity term
         self.remove_gravity(remove_g)
+
+        gt_pos = self.data["gt_translation"]
+
+        ts = self.data["time"]
+        t_reshape = ts.reshape((-1,1))
+        t = (t_reshape[self.w:] - t_reshape[:-self.w])
+        self.targets = ((gt_pos[self.w:, :3] - gt_pos[:-self.w, :3]) / t).numpy()
 
 
 
@@ -183,6 +193,9 @@ class BlackBird(CompiledSequence):
         self.data["gyro"] = torch.tensor(raw_imu[:, 1:4])
         self.data["acc"] = torch.tensor(raw_imu[:, 4:])
 
+        self.features = np.concatenate([self.data["gyro"], self.data["acc"]], axis=1)
+
+
         # interpolate ground-truth samples at thrust times
         self.data["gt_translation"]  = interp1d(gt_traj_tmp[:, 0], gt_traj_tmp[:, 1:4], axis=0)(times_imu)
         self.data["gt_orientation"] = Slerp(gt_traj_tmp[:, 0], Rotation.from_quat(gt_traj_tmp[:, 4:8]))(times_imu).as_quat()
@@ -197,9 +210,7 @@ class BlackBird(CompiledSequence):
         self.data["dt"] = (self.data["time"][1:] - self.data["time"][:-1])[:, None]
         self.data["mask"] = torch.ones(self.data["time"].shape[0], dtype=torch.bool)
 
-    def get_length(self):
-        return self.data["time"].shape[0]
-    
+
     def get_feature(self):
         return self.features
 
@@ -207,7 +218,11 @@ class BlackBird(CompiledSequence):
         return self.targets
 
     def get_aux(self):
-        return np.concatenate([self.ts, self.orientations, self.gt_pos], axis=1)
+        #print(self.data["time"].shape)
+        self.data["time"] = self.data["time"].unsqueeze(-1)
+        #print(self.data["gt_orientation"].shape)
+        #print(self.data["gt_translation"].shape)
+        return np.concatenate([self.data["time"] , self.data["gt_orientation"], self.data["gt_translation"]], axis=1)
     
 
     def load_imu(self, folder):
@@ -218,6 +233,10 @@ class BlackBird(CompiledSequence):
             os.path.join(folder, "thrust_data.csv"), dtype=float, delimiter=","
         )
         self.imu_data = copy.deepcopy(imu_data)
+        self.info["time"] = imu_data[:,0] / 1e9
+        self.info["acc"] = imu_data[:,1:4]
+        self.info["gyro"] = imu_data[:,4:]
+        self.ts = self.info["time"]
         self.thrusts = copy.deepcopy(thrusts)
 
 

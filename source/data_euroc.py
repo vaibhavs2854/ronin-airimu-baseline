@@ -92,7 +92,7 @@ class EurocSequence(CompiledSequence):
         self.info["gyro"] = imu_data[:,1:4] # w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1]
         self.info["acc"] = imu_data[:,4:]# acc a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2]
     
-    def load_gt(self, folder):
+    def load_gt(self, folder):  
         gt_data = np.loadtxt(osp.join(folder, "mav0/state_groundtruth_estimate0/data.csv"), dtype=float, delimiter=',')
         self.info["gt_time"] = gt_data[:,0] / 1e9
         self.info["pos"] = gt_data[:,1:4]
